@@ -1,7 +1,7 @@
 {
-   "name": "wasi-md-v2",
+   "name": "IL-CAPITANO-V2",
    "version": "2.5.0",
-   "description": "Multi device whatsapp bot by itxxwasi ....",
+   "description": "Multi device whatsapp bot by Jin Runcandel ",
    "main": "index.js",
    "type": "commonjs",
    "scripts": {
