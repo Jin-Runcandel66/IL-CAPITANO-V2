@@ -1,0 +1,78 @@
+# This workflow will build and push a node.js application to an Azure Web App when a commit is pushed to your default branch.
+#
+# This workflow assumes you have already created the target Azure App Service web app.
+# For instructions see https://docs.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-cli
+#
+# To configure this workflow:
+#
+# 1. Download the Publish Profile for your Azure Web App. You can download this file from the Overview page of your Web App in the Azure Portal.
+#    For more information: https://docs.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=applevel#generate-deployment-credentials
+#
+# 2. Create a secret in your repository named AZURE_WEBAPP_PUBLISH_PROFILE, paste the publish profile contents as the value of the secret.
+#    For instructions on obtaining the publish profile see: https://docs.microsoft.com/azure/app-service/deploy-github-actions#configure-the-github-secret
+#
+# 3. Change the value for the AZURE_WEBAPP_NAME. Optionally, change the AZURE_WEBAPP_PACKAGE_PATH and NODE_VERSION environment variables below.
+#
+# For more information on GitHub Actions for Azure: https://github.com/Azure/Actions
+# For more information on the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME:  𝛪𝐿 𝐶𝛥𝛲𝛪𝑇𝛥𝛮𝛩    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '14.x'                # set this to the node version to use
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: npm install, build, and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm run test --if-present
+
+    - name: Upload artifact for deployment job
+      uses: actions/upload-artifact@v3
+      with:
+        name: node-app
+        path: .
+
+  deploy:
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Development'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v3
+      with:
+        name: node-app
+
+    - name: 'Deploy to Azure WebApp'
+      id: eyJub2lzZUtleSI6eyJwcml2YXRlIjp7InR5cGUiOiJCdWZmZXIiLCJkYXRhIjoiWUMxejg1UGtDenpMZWxYcC9iNHhZRVY0MkdRbVpJZDVwVm9lWkl1cDhFaz0ifSwicHVibGljIjp7InR5cGUiOiJCdWZmZXIiLCJkYXRhIjoibmltOWVTbGFxRnZnUXhRY1RWU0UvU0NGSURZZFNmbFNKR3R2UkZCSElFQT0ifX0sInBhaXJpbmdFcGhlbWVyYWxLZXlQYWlyIjp7InByaXZhdGUiOnsidHlwZSI6IkJ1ZmZlciIsImRhdGEiOiIrRkplVkJ2SkNENXlBOXArWnFqM1J1TnpkYVZrbmVIWHRhV0RTalBldjFnPSJ9LCJwdWJsaWMiOnsidHlwZSI6IkJ1ZmZlciIsImRhdGEiOiJoWjNOUjFUTktrNWRNbDBjdWZkdmVITFJobVdWSjIvMUlKOTV3SkZFV2k4PSJ9fSwic2lnbmVkSWRlbnRpdHlLZXkiOnsicHJpdmF0ZSI6eyJ0eXBlIjoiQnVmZmVyIiwiZGF0YSI6IkdNNDBCMS9BYXBmU1JuaGNMa3hLSWQ0OCt3SHVKakRnUStDTFRzbjRkMjQ9In0sInB1YmxpYyI6eyJ0eXBlIjoiQnVmZmVyIiwiZGF0YSI6Ikc2L3k3eVJlTnF2NHZ5M3lRcVJHZ1VsUGJWM3FiYUR5cHBZWG91WHZwR3M9In19LCJzaWduZWRQcmVLZXkiOnsia2V5UGFpciI6eyJwcml2YXRlIjp7InR5cGUiOiJCdWZmZXIiLCJkYXRhIjoia016SW1KN09qYUdQQVpTNlhrRW1XRmlxTGxEOVRSdm42VldZUnREUUFWbz0ifSwicHVibGljIjp7InR5cGUiOiJCdWZmZXIiLCJkYXRhIjoieU01aFdvTU55emt2SEY5aXhxNU9FSDRmdEtXSXJTeGRkQXp5VW1JUG1Tdz0ifX0sInNpZ25hdHVyZSI6eyJ0eXBlIjoiQnVmZmVyIiwiZGF0YSI6IlhyUnVTSGJpRGU4ZFdGeWxjYjVJTCtlZi9xd0JsSkNDT3kyM3pxRTd0L1lOZjA0WFRNUkJLb2JybHRZYkFhd1I5LzlzTHViYzVISys4bFRLVHhaQkNBPT0ifSwia2V5SWQiOjF9LCJyZWdpc3RyYXRpb25JZCI6NzgsImFkdlNlY3JldEtleSI6Ik96WkpXM3NRQndWejdXZVR0U0NBNWRtWWJNT0ZRYkNIYTRMbTZXVkhoY289IiwicHJvY2Vzc2VkSGlzdG9yeU1lc3NhZ2VzIjpbeyJrZXkiOnsicmVtb3RlSmlkIjoiOTIzMDc0MDQ3NzA3QHMud2hhdHNhcHAubmV0IiwiZnJvbU1lIjp0cnVlLCJpZCI6IjJCNzcxOTE0NURERUM5OUQyQUNERjI5MTNBRjFCNjhGIn0sIm1lc3NhZ2VUaW1lc3RhbXAiOjE3MjAzNDY2MTd9XSwibmV4dFByZUtleUlkIjozMiwiZmlyc3RVbnVwbG9hZGVkUHJlS2V5SWQiOjMyLCJhY2NvdW50U3luY0NvdW50ZXIiOjEsImFjY291bnRTZXR0aW5ncyI6eyJ1bmFyY2hpdmVDaGF0cyI6ZmFsc2V9LCJkZXZpY2VJZCI6ImZKMlNTQUUzUWJHWGp3ektuNnlvZlEiLCJwaG9uZUlkIjoiMGNjNTVmNjktNDIyZS00MzQ0LWI4MWItZGNmNjczNzA1MmE5IiwiaWRlbnRpdHlJZCI6eyJ0eXBlIjoiQnVmZmVyIiwiZGF0YSI6IlRldEZNUDRKRVJUYkViSDNRb2NsdVczWk9icz0ifSwicmVnaXN0ZXJlZCI6dHJ1ZSwiYmFja3VwVG9rZW4iOnsidHlwZSI6IkJ1ZmZlciIsImRhdGEiOiJUSmNSd1cwZ3NXZXYzWmltck5XQnF5anhETmc9In0sInJlZ2lzdHJhdGlvbiI6e30sInBhaXJpbmdDb2RlIjoiOVhWOUxBVkMiLCJtZSI6eyJpZCI6IjkyMzA3NDA0NzcwNzo4QHMud2hhdHNhcHAubmV0In0sImFjY291bnQiOnsiZGV0YWlscyI6IkNQNjQwSUVHRU9iUHFiUUdHQUVnQUNnQSIsImFjY291bnRTaWduYXR1cmVLZXkiOiJzaHppY1B1TUZQY0pod2JPWmlzK0xmNkJSSGgzWEYzQkxHZ21PK3FFeHg0PSIsImFjY291bnRTaWduYXR1cmUiOiJ2cmdMMXpsVDlTazVWdCtYdjJiOHM0Vk5lTHRWZ2o1dzF3TFd1MEpQRkZORjBkc0p0OEVTWEdOLzFETWNWL1BxRzAraml1bXgvKy9ianNHVFdSeklCQT09IiwiZGV2aWNlU2lnbmF0dXJlIjoiZnZJcFF6Ym9yeVp4VTZqVW10bndzOVd0eU1OWnQ4SmZuMnhxTmpYSWo5QnF3b3A1M0xOeGVKWGdSN285emRIZjhvWjdrdml2Sy9LNStSNDVPNE5CQWc9PSJ9LCJzaWduYWxJZGVudGl0aWVzIjpbeyJpZGVudGlmaWVyIjp7Im5hbWUiOiI5MjMwNzQwNDc3MDc6OEBzLndoYXRzYXBwLm5ldCIsImRldmljZUlkIjowfSwiaWRlbnRpZmllcktleSI6eyJ0eXBlIjoiQnVmZmVyIiwiZGF0YSI6IkJiSWM0bkQ3akJUM0NZY0d6bVlyUGkzK2dVUjRkMXhkd1N4b0pqdnFoTWNlIn19XSwicGxhdGZvcm0iOiJhbmRyb2lkIiwibGFzdEFjY291bnRTeW5jVGltZXN0YW1wIjoxNzIwMzQ2NjEyLCJteUFwcFN0YXRlS2V5SWQiOiJBQUFBQUg4aSJ9
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
